@@ -55,6 +55,7 @@ ui <- page_navbar(
       }
     "))
   ),
+  
   # SIDEBAR 
   sidebar = sidebar(
     title = "Configuration",
@@ -110,8 +111,7 @@ ui <- page_navbar(
     "Calculate",
     class = "btn-primary w-100"
   ), 
-  
-  
+
   # ESTIMATOR
   nav_panel(
     "Estimator",
@@ -194,3 +194,75 @@ ui <- page_navbar(
     )
   )
 )
+
+# ======================
+# SERVER
+# ======================
+server <- function(input, output, session){
+  
+  # Dynamic Statistical Test Menu
+  output$stat_test_ui <- renderUI({
+    if(input$test_family == "t tests"){
+      selectInput(
+        "stat_test",
+        "Statistical Test",
+        choices = c(
+          "Means: Difference between two independent means" = "two.sample",
+          "Means: Difference between paired means" = "paired",
+          "Means: Difference from constant" = "one.sample"
+        )
+      )
+    } else if(input$test_family == "Correlation and Regression") {
+      selectInput(
+        "stat_test",
+        "Statistical Test",
+        choices = c(
+          "Correlation: Bivariate normal model" = "correlation"
+        )
+      )
+    } else {
+      selectInput(
+        "stat_test",
+        "Statistical Test",
+        choices = c(
+          "ANOVA: Fixed effects, omnibus" = "anova",
+          "ANOVA: Repeated measures, within factors" = "anova.rm"
+        )
+      )
+    }
+  })
+  
+  # Power Analysis Calculation
+  calc_res <- eventReactive(input$calc, {
+    req(input$stat_test)
+    if(input$stat_test %in% c("two.sample","paired","one.sample")){
+      pwr.t.test(
+        d = input$effect,
+        power = input$power,
+        sig.level = input$sig_level,
+        type = input$stat_test
+      )
+    } else if(input$stat_test == "correlation") {
+      pwr.r.test(
+        r = input$effect,
+        power = input$power,
+        sig.level = input$sig_level
+      )
+    } else if(input$stat_test == "anova") {
+      pwr.anova.test(
+        k = 3,
+        f = input$effect,
+        power = input$power,
+        sig.level = input$sig_level
+      )
+    } else if(input$stat_test == "anova.rm") {
+      f_adj <- input$effect / sqrt(1 - 0.5)
+      pwr.anova.test(
+        k = 3,
+        f = f_adj,
+        power = input$power,
+        sig.level = input$sig_level
+      )
+    }
+  })
+}
