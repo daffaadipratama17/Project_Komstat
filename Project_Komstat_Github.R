@@ -55,5 +55,19 @@ ui <- page_navbar(
       }
     "))
   ),
+  # SIDEBAR 
+  sidebar = sidebar(
+    title = "Configuration",
+    
+    selectInput(
+      "test_family",
+      "Test Family",
+      choices = c(
+        "t tests",
+        "Correlation and Regression",
+        "F tests"
+      )
+    )
+  )
 )
   
